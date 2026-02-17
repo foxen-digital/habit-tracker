@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class WaterEntry extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'glasses',
         'date',
