@@ -10,15 +10,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      sqlite:
-        image: nouchka/sqlite3
-        options: >-
-          --health-cmd "sqlite3 /data/database.sqlite '.tables'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
 
@@ -31,11 +22,6 @@ jobs:
 
       - name: Copy environment file
         run: cp .env.example .env
-
-      - name: Create SQLite database
-        run: |
-          mkdir -p database
-          touch database/database.sqlite
 
       - name: Install Composer dependencies
         run: composer install --no-progress --prefer-dist --optimize-autoloader
