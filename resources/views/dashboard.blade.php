@@ -10,10 +10,151 @@
 <body class="bg-gray-900 text-gray-100 min-h-screen">
     <div class="max-w-6xl mx-auto px-4 py-8">
         <!-- Header -->
-        <header class="mb-8">
-            <h1 class="text-3xl font-bold text-emerald-400">Danny's Habit Tracker</h1>
-            <p class="text-gray-400 mt-1">{{ now()->format('l, F jS, Y') }}</p>
+        <header class="mb-6 flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-emerald-400">Danny's Habit Tracker</h1>
+                <p class="text-gray-400 mt-1">{{ now()->format('l, F jS, Y') }}</p>
+            </div>
+            <button onclick="toggleEntryForms()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                + Add Entry
+            </button>
         </header>
+
+        <!-- Flash Message -->
+        @if(session('success'))
+            <div class="mb-4 bg-emerald-900/50 border border-emerald-500 text-emerald-300 px-4 py-3 rounded-lg">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <!-- Entry Forms (Hidden by default) -->
+        <div id="entryForms" class="hidden mb-8 bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <h2 class="text-xl font-semibold mb-4">Quick Entry</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Weight Form -->
+                <form action="{{ route('weight.store') }}" method="POST" class="bg-gray-700/50 rounded-lg p-4">
+                    @csrf
+                    <h3 class="font-medium text-emerald-400 mb-3">⚖️ Weight</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm text-gray-400">Weight (kg)</label>
+                            <input type="number" name="weight_kg" step="0.1" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-emerald-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Date</label>
+                            <input type="date" name="date" value="{{ now()->format('Y-m-d') }}" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-emerald-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Notes (optional)</label>
+                            <input type="text" name="notes" placeholder="e.g., Felt bloated today"
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-emerald-500 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 rounded font-medium transition-colors">
+                            Save Weight
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Walk Form -->
+                <form action="{{ route('walk.store') }}" method="POST" class="bg-gray-700/50 rounded-lg p-4">
+                    @csrf
+                    <h3 class="font-medium text-blue-400 mb-3">🚶 Walk</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm text-gray-400">Distance (miles)</label>
+                            <input type="number" name="distance_miles" step="0.1" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Steps (optional)</label>
+                            <input type="number" name="steps"
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Date</label>
+                            <input type="date" name="date" value="{{ now()->format('Y-m-d') }}" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Notes (optional)</label>
+                            <input type="text" name="notes" placeholder="e.g., Morning walk in the park"
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded font-medium transition-colors">
+                            Save Walk
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Water Form -->
+                <form action="{{ route('water.store') }}" method="POST" class="bg-gray-700/50 rounded-lg p-4">
+                    @csrf
+                    <h3 class="font-medium text-cyan-400 mb-3">💧 Water</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm text-gray-400">Glasses of water</label>
+                            <input type="number" name="glasses" min="0" max="20" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-cyan-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Date</label>
+                            <input type="date" name="date" value="{{ now()->format('Y-m-d') }}" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-cyan-500 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 py-2 rounded font-medium transition-colors">
+                            Save Water
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Mood Form -->
+                <form action="{{ route('mood.store') }}" method="POST" class="bg-gray-700/50 rounded-lg p-4">
+                    @csrf
+                    <h3 class="font-medium text-purple-400 mb-3">😊 Mood</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm text-gray-400">How are you feeling?</label>
+                            <select name="mood" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-purple-500 focus:outline-none">
+                                <option value="">Select mood...</option>
+                                <option value="great">🌟 Great</option>
+                                <option value="good">😊 Good</option>
+                                <option value="okay">😐 Okay</option>
+                                <option value="bad">😔 Bad</option>
+                                <option value="terrible">😫 Terrible</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Energy level (1-10)</label>
+                            <input type="range" name="energy_level" min="1" max="10" value="5"
+                                class="w-full mt-1 accent-purple-500" oninput="this.nextElementSibling.textContent = this.value">
+                            <span class="text-purple-400 font-medium">5</span>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Sleep quality (1-10, optional)</label>
+                            <input type="range" name="sleep_quality" min="1" max="10" value="5"
+                                class="w-full mt-1 accent-purple-500" oninput="this.nextElementSibling.textContent = this.value">
+                            <span class="text-purple-400 font-medium">5</span>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Date</label>
+                            <input type="date" name="date" value="{{ now()->format('Y-m-d') }}" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-purple-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Notes (optional)</label>
+                            <input type="text" name="notes" placeholder="e.g., Good sleep, productive day"
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-purple-500 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded font-medium transition-colors">
+                            Save Mood
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -134,6 +275,11 @@
     </div>
 
     <script>
+        function toggleEntryForms() {
+            const forms = document.getElementById('entryForms');
+            forms.classList.toggle('hidden');
+        }
+
         // Weight Chart
         const weightCtx = document.getElementById('weightChart').getContext('2d');
         const weightLabels = @json($recentWeights->pluck('date')->map(fn($d) => $d->format('M j'))->reverse()->values());
