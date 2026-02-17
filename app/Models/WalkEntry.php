@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class WalkEntry extends Model
 {
@@ -22,12 +23,43 @@ class WalkEntry extends Model
     {
         $entries = static::where('date', '>=', now()->subDays(7))->get();
         
+        $totalMiles = $entries->sum('distance_miles');
+        $avgMiles = $entries->avg('distance_miles');
+        
         return [
-            'total_miles' => $entries->sum('distance_miles'),
-            'average_miles' => round($entries->avg('distance_miles'), 2),
-            'total_steps' => $entries->sum('steps'),
-            'days_logged' => $entries->count(),
-            'daily_goal' => 3,
+            'total_miles' => round($totalMiles, 1),
+            'average_miles' => round($avgMiles ?? 0, 1),
+            'entries_count' => $entries->count(),
+        ];
+    }
+
+    /**
+     * Get walking data for the last N days (contiguous)
+     */
+    public static function getChartData(int $days = 7): array
+    {
+        $entries = static::where('date', '>=', now()->subDays($days)->startOfDay())
+            ->get()
+            ->keyBy(fn($e) => $e->date->format('Y-m-d'));
+
+        $labels = [];
+        $data = [];
+        $stepsData = [];
+
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $date = Carbon::today()->subDays($i);
+            $dateKey = $date->format('Y-m-d');
+            $entry = $entries->get($dateKey);
+
+            $labels[] = $date->format('M j');
+            $data[] = $entry?->distance_miles ?? 0;
+            $stepsData[] = $entry?->steps;
+        }
+
+        return [
+            'labels' => $labels,
+            'distance' => $data,
+            'steps' => $stepsData,
         ];
     }
 }

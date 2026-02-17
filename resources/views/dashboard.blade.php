@@ -222,7 +222,6 @@
             </div>
         </div>
 
-        <!-- Charts Section -->
         <!-- Daily Goals Section -->
         <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 mb-8">
             <div class="flex items-center justify-between mb-4">
@@ -318,18 +317,45 @@
             @endif
         </div>
 
-
+        <!-- Charts Section - Row 1: Weight & Walking -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <!-- Weight Chart -->
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
-                <h3 class="text-lg font-semibold mb-4">Weight Trend (Last 7 Days)</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Weight Trend (Last 14 Days)</h3>
+                    <span class="text-emerald-400 text-sm">Goal: -25kg</span>
+                </div>
                 <canvas id="weightChart" height="200"></canvas>
             </div>
 
             <!-- Walking Chart -->
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
-                <h3 class="text-lg font-semibold mb-4">Walking Distance (Last 7 Days)</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Walking Distance (Last 7 Days)</h3>
+                    <span class="text-blue-400 text-sm">Goal: 3mi/day</span>
+                </div>
                 <canvas id="walkChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Charts Section - Row 2: Water & Mood -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Water Chart -->
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Water Intake (Last 7 Days)</h3>
+                    <span class="text-cyan-400 text-sm">Goal: 8 glasses</span>
+                </div>
+                <canvas id="waterChart" height="200"></canvas>
+            </div>
+
+            <!-- Mood Chart -->
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Mood & Energy (Last 7 Days)</h3>
+                    <span class="text-purple-400 text-sm">Score: 1-5</span>
+                </div>
+                <canvas id="moodChart" height="200"></canvas>
             </div>
         </div>
 
@@ -342,6 +368,9 @@
                         <div class="flex justify-between items-center py-2 border-b border-gray-700">
                             <span class="text-gray-400">{{ $entry->date->format('M j') }}</span>
                             <span class="font-semibold">{{ $entry->weight_kg }}kg</span>
+                            @if($entry->notes)
+                                <span class="text-xs text-gray-500">{{ Str::limit($entry->notes, 20) }}</span>
+                            @endif
                         </div>
                     @empty
                         <p class="text-gray-500">No entries yet</p>
@@ -381,55 +410,182 @@
             form.classList.toggle('hidden');
         }
 
-        // Weight Chart
+        // Chart.js global config
+        Chart.defaults.color = '#9ca3af';
+        Chart.defaults.borderColor = '#374151';
+
+        // Weight Chart (Line)
         const weightCtx = document.getElementById('weightChart').getContext('2d');
-        const weightLabels = @json($recentWeights->pluck('date')->map(fn($d) => $d->format('M j'))->reverse()->values());
-        const weightData = @json($recentWeights->pluck('weight_kg')->reverse()->values());
-        
         new Chart(weightCtx, {
             type: 'line',
             data: {
-                labels: weightLabels,
+                labels: @json($weightChart['labels']),
                 datasets: [{
                     label: 'Weight (kg)',
-                    data: weightData,
+                    data: @json($weightChart['data']),
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
                     fill: true,
-                    tension: 0.4
+                    tension: 0.3,
+                    spanGaps: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#10b981',
                 }]
             },
             options: {
                 responsive: true,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { grid: { color: '#374151' }, ticks: { color: '#9ca3af' } },
+                    y: { 
+                        grid: { color: '#374151' }, 
+                        ticks: { color: '#9ca3af', callback: v => v + 'kg' }
+                    },
                     x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
                 }
             }
         });
 
-        // Walk Chart
+        // Walk Chart (Bar with goal line)
         const walkCtx = document.getElementById('walkChart').getContext('2d');
-        const walkLabels = @json($recentWalks->pluck('date')->map(fn($d) => $d->format('M j'))->reverse()->values());
-        const walkData = @json($recentWalks->pluck('distance_miles')->reverse()->values());
-        
         new Chart(walkCtx, {
             type: 'bar',
             data: {
-                labels: walkLabels,
+                labels: @json($walkChart['labels']),
                 datasets: [{
                     label: 'Distance (mi)',
-                    data: walkData,
+                    data: @json($walkChart['distance']),
                     backgroundColor: '#3b82f6',
-                    borderRadius: 4
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { 
+                    legend: { display: false },
+                    annotation: {
+                        annotations: {
+                            goalLine: {
+                                type: 'line',
+                                yMin: 3,
+                                yMax: 3,
+                                borderColor: '#60a5fa',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { 
+                        grid: { color: '#374151' }, 
+                        ticks: { color: '#9ca3af', callback: v => v + 'mi' },
+                        suggestedMax: 4
+                    },
+                    x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                }
+            }
+        });
+
+        // Water Chart (Bar with goal line)
+        const waterCtx = document.getElementById('waterChart').getContext('2d');
+        new Chart(waterCtx, {
+            type: 'bar',
+            data: {
+                labels: @json($waterChart['labels']),
+                datasets: [{
+                    label: 'Glasses',
+                    data: @json($waterChart['data']),
+                    backgroundColor: '#06b6d4',
+                    borderRadius: 4,
                 }]
             },
             options: {
                 responsive: true,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { grid: { color: '#374151' }, ticks: { color: '#9ca3af' }, suggestedMax: 4 },
+                    y: { 
+                        grid: { color: '#374151' }, 
+                        ticks: { color: '#9ca3af', stepSize: 2 },
+                        suggestedMax: 10
+                    },
+                    x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                }
+            },
+            plugins: [{
+                id: 'goalLine',
+                afterDraw: (chart) => {
+                    const ctx = chart.ctx;
+                    const yAxis = chart.scales.y;
+                    const xAxis = chart.scales.x;
+                    const y = yAxis.getPixelForValue(8);
+                    
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeStyle = '#22d3ee';
+                    ctx.lineWidth = 2;
+                    ctx.moveTo(xAxis.left, y);
+                    ctx.lineTo(xAxis.right, y);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }]
+        });
+
+        // Mood Chart (Line with multiple datasets)
+        const moodCtx = document.getElementById('moodChart').getContext('2d');
+        new Chart(moodCtx, {
+            type: 'line',
+            data: {
+                labels: @json($moodChart['labels']),
+                datasets: [
+                    {
+                        label: 'Mood',
+                        data: @json($moodChart['mood']),
+                        borderColor: '#a855f7',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        tension: 0.3,
+                        spanGaps: true,
+                        pointRadius: 4,
+                    },
+                    {
+                        label: 'Energy',
+                        data: @json($moodChart['energy']),
+                        borderColor: '#f97316',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        tension: 0.3,
+                        spanGaps: true,
+                        pointRadius: 3,
+                        borderDash: [5, 5],
+                    },
+                    {
+                        label: 'Sleep',
+                        data: @json($moodChart['sleep']),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.3,
+                        spanGaps: true,
+                        pointRadius: 3,
+                        borderDash: [2, 2],
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { 
+                    legend: { 
+                        display: true,
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 15 }
+                    } 
+                },
+                scales: {
+                    y: { 
+                        grid: { color: '#374151' }, 
+                        ticks: { color: '#9ca3af', stepSize: 1 },
+                        min: 0,
+                        max: 10
+                    },
                     x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
                 }
             }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class MoodEntry extends Model
 {
@@ -39,6 +40,55 @@ class MoodEntry extends Model
             'average_energy' => round($avgEnergy ?? 5, 1),
             'average_sleep' => round($avgSleep ?? 5, 1),
             'entries_count' => $entries->count(),
+        ];
+    }
+
+    /**
+     * Get mood data for the last 7 days (contiguous)
+     */
+    public static function getChartData(int $days = 7): array
+    {
+        $moodScores = [
+            'great' => 5,
+            'good' => 4,
+            'okay' => 3,
+            'bad' => 2,
+            'terrible' => 1,
+        ];
+
+        $moodLabels = [
+            'great' => '🌟',
+            'good' => '😊',
+            'okay' => '😐',
+            'bad' => '😔',
+            'terrible' => '😫',
+        ];
+
+        $entries = static::where('date', '>=', now()->subDays($days)->startOfDay())
+            ->get()
+            ->keyBy(fn($e) => $e->date->format('Y-m-d'));
+
+        $labels = [];
+        $moodData = [];
+        $energyData = [];
+        $sleepData = [];
+
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $date = Carbon::today()->subDays($i);
+            $dateKey = $date->format('Y-m-d');
+            $entry = $entries->get($dateKey);
+
+            $labels[] = $date->format('M j');
+            $moodData[] = $entry ? ($moodScores[$entry->mood] ?? 3) : null;
+            $energyData[] = $entry?->energy_level;
+            $sleepData[] = $entry?->sleep_quality;
+        }
+
+        return [
+            'labels' => $labels,
+            'mood' => $moodData,
+            'energy' => $energyData,
+            'sleep' => $sleepData,
         ];
     }
 }
