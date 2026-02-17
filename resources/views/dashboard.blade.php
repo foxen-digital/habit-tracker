@@ -223,6 +223,102 @@
         </div>
 
         <!-- Charts Section -->
+        <!-- Daily Goals Section -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold">Daily Goals</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-400">
+                        {{ $dailyGoalStats['completed'] }}/{{ $dailyGoalStats['total'] }} completed today ({{ $dailyGoalStats['percent'] }}%)
+                    </span>
+                    <button onclick="toggleGoalForm()" class="text-emerald-400 hover:text-emerald-300 text-sm font-medium">
+                        + Add Goal
+                    </button>
+                </div>
+            </div>
+
+            <!-- Add Goal Form (Hidden by default) -->
+            <div id="goalForm" class="hidden mb-4 bg-gray-700/50 rounded-lg p-4">
+                <form action="{{ route('goals.store') }}" method="POST" class="flex flex-wrap gap-3 items-end">
+                    @csrf
+                    <div>
+                        <label class="text-sm text-gray-400">Emoji</label>
+                        <input type="text" name="emoji" value="✅" maxlength="10"
+                            class="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-2 mt-1 focus:border-emerald-500 focus:outline-none text-center">
+                    </div>
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="text-sm text-gray-400">Goal Name</label>
+                        <input type="text" name="name" required placeholder="e.g., Hit Calorie Target"
+                            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-emerald-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded font-medium transition-colors">
+                        Create Goal
+                    </button>
+                </form>
+            </div>
+
+            @if($dailyGoals->count() > 0)
+                <!-- Today's Goals Checklist -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+                    @foreach($dailyGoals as $goal)
+                        @php
+                            $isCompleted = $goal->isCompletedForDate(now());
+                        @endphp
+                        <div class="flex items-center gap-3 bg-gray-700/30 rounded-lg p-3 {{ $isCompleted ? 'opacity-60' : '' }}">
+                            <form action="{{ route('goals.toggle', $goal) }}" method="POST" class="flex-shrink-0">
+                                @csrf
+                                <input type="hidden" name="date" value="{{ now()->format('Y-m-d') }}">
+                                <input type="hidden" name="completed" value="{{ $isCompleted ? '0' : '1' }}">
+                                <button type="submit" class="w-6 h-6 rounded border-2 {{ $isCompleted ? 'bg-emerald-500 border-emerald-500' : 'border-gray-500 hover:border-emerald-400' }} flex items-center justify-center transition-colors">
+                                    @if($isCompleted)
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    @endif
+                                </button>
+                            </form>
+                            <span class="text-lg">{{ $goal->emoji }}</span>
+                            <span class="flex-1 {{ $isCompleted ? 'line-through text-gray-500' : '' }}">{{ $goal->name }}</span>
+                            <form action="{{ route('goals.destroy', $goal) }}" method="POST" class="flex-shrink-0" onsubmit="return confirm('Delete this goal?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-gray-500 hover:text-red-400 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Weekly Progress Chart -->
+                <div class="bg-gray-700/30 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-gray-400 mb-3">Weekly Progress</h3>
+                    <div class="flex items-end gap-2 h-16">
+                        @foreach($weeklyGoalStats as $day)
+                            <div class="flex-1 flex flex-col items-center">
+                                <div class="w-full bg-gray-600 rounded-t h-12 relative overflow-hidden">
+                                    <div class="absolute bottom-0 w-full bg-emerald-500 rounded-t transition-all" style="height: {{ $day['percent'] }}%"></div>
+                                </div>
+                                <span class="text-xs text-gray-500 mt-1">{{ $day['date'] }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="flex justify-between mt-2 text-xs text-gray-500">
+                        <span>{{ $weeklyGoalStats[0]['date'] }}</span>
+                        <span>{{ $weeklyGoalStats[6]['date'] }}</span>
+                    </div>
+                </div>
+            @else
+                <div class="text-center py-8 text-gray-500">
+                    <p>No custom goals yet. Add your first daily goal above!</p>
+                    <p class="text-sm mt-2">Examples: Hit Calorie Target, Brush Teeth, Do daily stretch routine</p>
+                </div>
+            @endif
+        </div>
+
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <!-- Weight Chart -->
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
@@ -278,6 +374,11 @@
         function toggleEntryForms() {
             const forms = document.getElementById('entryForms');
             forms.classList.toggle('hidden');
+        }
+
+        function toggleGoalForm() {
+            const form = document.getElementById('goalForm');
+            form.classList.toggle('hidden');
         }
 
         // Weight Chart
