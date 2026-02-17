@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DailyGoalController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntryController;
-use App\Http\Controllers\DailyGoalController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', DashboardController::class);
 

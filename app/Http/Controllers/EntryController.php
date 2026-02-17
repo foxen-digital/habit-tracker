@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\WeightEntry;
+use App\Models\MoodEntry;
 use App\Models\WalkEntry;
 use App\Models\WaterEntry;
-use App\Models\MoodEntry;
-use Illuminate\Http\Request;
+use App\Models\WeightEntry;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 class EntryController extends Controller
 {

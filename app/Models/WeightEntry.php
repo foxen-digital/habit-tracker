@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 class WeightEntry extends Model
 {
@@ -24,13 +24,13 @@ class WeightEntry extends Model
     {
         $latest = static::orderBy('date', 'desc')->first();
         $first = static::orderBy('date', 'asc')->first();
-        
-        if (!$latest || !$first) {
+
+        if (! $latest || ! $first) {
             return ['current' => null, 'start' => null, 'lost' => 0, 'goal' => 25];
         }
-        
+
         $lost = $first->weight_kg - $latest->weight_kg;
-        
+
         return [
             'current' => $latest->weight_kg,
             'start' => $first->weight_kg,
@@ -48,7 +48,7 @@ class WeightEntry extends Model
         $entries = static::where('date', '>=', now()->subDays($days)->startOfDay())
             ->orderBy('date')
             ->get()
-            ->keyBy(fn($e) => $e->date->format('Y-m-d'));
+            ->keyBy(fn ($e) => $e->date->format('Y-m-d'));
 
         $labels = [];
         $data = [];
@@ -60,7 +60,7 @@ class WeightEntry extends Model
             $entry = $entries->get($dateKey);
 
             $labels[] = $date->format('M j');
-            
+
             if ($entry) {
                 $data[] = $entry->weight_kg;
                 $lastWeight = $entry->weight_kg;

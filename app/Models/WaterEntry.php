@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 class WaterEntry extends Model
 {
@@ -28,8 +28,8 @@ class WaterEntry extends Model
     {
         $entries = static::where('date', '>=', now()->subDays($days)->startOfDay())
             ->get()
-            ->groupBy(fn($e) => $e->date->format('Y-m-d'))
-            ->map(fn($group) => $group->sum('glasses'));
+            ->groupBy(fn ($e) => $e->date->format('Y-m-d'))
+            ->map(fn ($group) => $group->sum('glasses'));
 
         $labels = [];
         $data = [];

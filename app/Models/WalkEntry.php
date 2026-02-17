@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 class WalkEntry extends Model
 {
@@ -22,10 +22,10 @@ class WalkEntry extends Model
     public static function getWeeklyStats(): array
     {
         $entries = static::where('date', '>=', now()->subDays(7))->get();
-        
+
         $totalMiles = $entries->sum('distance_miles');
         $avgMiles = $entries->avg('distance_miles');
-        
+
         return [
             'total_miles' => round($totalMiles, 1),
             'average_miles' => round($avgMiles ?? 0, 1),
@@ -40,7 +40,7 @@ class WalkEntry extends Model
     {
         $entries = static::where('date', '>=', now()->subDays($days)->startOfDay())
             ->get()
-            ->keyBy(fn($e) => $e->date->format('Y-m-d'));
+            ->keyBy(fn ($e) => $e->date->format('Y-m-d'));
 
         $labels = [];
         $data = [];

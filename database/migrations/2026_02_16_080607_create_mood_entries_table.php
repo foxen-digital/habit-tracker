@@ -16,7 +16,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->date('date')->unique();
             $table->timestamps();
-            
+
             $table->index('date');
         });
     }

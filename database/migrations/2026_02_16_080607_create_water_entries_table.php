@@ -13,7 +13,7 @@ return new class extends Migration
             $table->integer('glasses'); // 1 glass = 250ml
             $table->date('date')->unique();
             $table->timestamps();
-            
+
             $table->index('date');
         });
     }

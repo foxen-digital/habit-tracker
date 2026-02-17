@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\DailyGoal;
 use App\Models\DailyGoalCompletion;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 class DailyGoalController extends Controller
 {
@@ -43,6 +43,7 @@ class DailyGoalController extends Controller
         );
 
         $message = $validated['completed'] ? 'Goal marked as complete!' : 'Goal unmarked.';
+
         return redirect('/')->with('success', $message);
     }
 

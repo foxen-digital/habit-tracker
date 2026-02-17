@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 class MoodEntry extends Model
 {
@@ -22,7 +22,7 @@ class MoodEntry extends Model
     public static function getWeeklyMoodTrend(): array
     {
         $entries = static::where('date', '>=', now()->subDays(7))->get();
-        
+
         $moodScores = [
             'great' => 5,
             'good' => 4,
@@ -30,11 +30,11 @@ class MoodEntry extends Model
             'bad' => 2,
             'terrible' => 1,
         ];
-        
-        $avgMood = $entries->map(fn($e) => $moodScores[$e->mood] ?? 3)->avg();
+
+        $avgMood = $entries->map(fn ($e) => $moodScores[$e->mood] ?? 3)->avg();
         $avgEnergy = $entries->avg('energy_level');
         $avgSleep = $entries->whereNotNull('sleep_quality')->avg('sleep_quality');
-        
+
         return [
             'average_mood' => round($avgMood ?? 3, 1),
             'average_energy' => round($avgEnergy ?? 5, 1),
@@ -66,7 +66,7 @@ class MoodEntry extends Model
 
         $entries = static::where('date', '>=', now()->subDays($days)->startOfDay())
             ->get()
-            ->keyBy(fn($e) => $e->date->format('Y-m-d'));
+            ->keyBy(fn ($e) => $e->date->format('Y-m-d'));
 
         $labels = [];
         $moodData = [];

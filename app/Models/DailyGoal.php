@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 class DailyGoal extends Model
 {
@@ -32,6 +32,7 @@ class DailyGoal extends Model
     public function isCompletedForDate(Carbon $date): bool
     {
         $completion = $this->getCompletionForDate($date);
+
         return $completion?->completed ?? false;
     }
 
