@@ -12,6 +12,7 @@ Route::post('/weight', [EntryController::class, 'storeWeight'])->name('weight.st
 Route::post('/walk', [EntryController::class, 'storeWalk'])->name('walk.store');
 Route::post('/water', [EntryController::class, 'storeWater'])->name('water.store');
 Route::post('/mood', [EntryController::class, 'storeMood'])->name('mood.store');
+Route::post('/glucose', [EntryController::class, 'storeGlucose'])->name('glucose.store');
 
 // Daily Goal routes
 Route::post('/goals', [DailyGoalController::class, 'store'])->name('goals.store');

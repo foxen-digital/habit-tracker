@@ -153,11 +153,49 @@
                         </button>
                     </div>
                 </form>
+
+                <!-- Glucose Form -->
+                <form action="{{ route('glucose.store') }}" method="POST" class="bg-gray-700/50 rounded-lg p-4">
+                    @csrf
+                    <h3 class="font-medium text-red-400 mb-3">🩸 Glucose</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm text-gray-400">Glucose (mmol/L)</label>
+                            <input type="number" name="glucose_mmol_l" step="0.1" min="1" max="30" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-red-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Reading Type</label>
+                            <select name="reading_type" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-red-500 focus:outline-none">
+                                <option value="">Select type...</option>
+                                <option value="fasting">Fasting</option>
+                                <option value="pre_meal">Pre-meal</option>
+                                <option value="post_meal">Post-meal</option>
+                                <option value="bedtime">Bedtime</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Date & Time</label>
+                            <input type="datetime-local" name="measured_at" value="{{ now()->format('Y-m-d\TH:i') }}" required
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-red-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Notes (optional)</label>
+                            <input type="text" name="notes" placeholder="e.g., After breakfast"
+                                class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mt-1 focus:border-red-500 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 py-2 rounded font-medium transition-colors">
+                            Save Glucose
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
         <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
             <!-- Weight Progress -->
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
                 <div class="flex items-center justify-between mb-2">
@@ -219,6 +257,24 @@
                 <div class="mt-3 text-xs text-gray-500">
                     Energy: {{ $moodTrend['average_energy'] }}/10 | Sleep: {{ $moodTrend['average_sleep'] }}/10
                 </div>
+            </div>
+
+            <!-- Glucose Stats -->
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400 text-sm">Weekly Glucose</span>
+                    <span class="text-red-400 text-2xl">🩸</span>
+                </div>
+                @if($glucoseStats['average'])
+                    <div class="text-3xl font-bold text-white">{{ $glucoseStats['average'] }}</div>
+                    <div class="text-sm text-gray-400">mmol/L avg ({{ $glucoseStats['readings'] }} readings)</div>
+                    <div class="mt-3 bg-gray-700 rounded-full h-2">
+                        <div class="bg-red-500 h-2 rounded-full" style="width: {{ $glucoseStats['in_target_percent'] }}%"></div>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1">{{ $glucoseStats['in_target_percent'] }}% in target range</div>
+                @else
+                    <div class="text-gray-500">No data yet</div>
+                @endif
             </div>
         </div>
 
@@ -359,8 +415,17 @@
             </div>
         </div>
 
+        <!-- Glucose Chart -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Blood Glucose (Last 7 Days)</h3>
+                <span class="text-red-400 text-sm">Target: 4.0-7.0 mmol/L (fasting)</span>
+            </div>
+            <canvas id="glucoseChart" height="200"></canvas>
+        </div>
+
         <!-- Recent Entries -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
                 <h3 class="text-lg font-semibold mb-4">Recent Weights</h3>
                 <div class="space-y-2">
@@ -385,6 +450,21 @@
                         <div class="flex justify-between items-center py-2 border-b border-gray-700">
                             <span class="text-gray-400">{{ $entry->date->format('M j') }}</span>
                             <span class="font-semibold">{{ $entry->distance_miles }}mi {{ $entry->steps ? "({$entry->steps} steps)" : '' }}</span>
+                        </div>
+                    @empty
+                        <p class="text-gray-500">No entries yet</p>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <h3 class="text-lg font-semibold mb-4">Recent Glucose</h3>
+                <div class="space-y-2">
+                    @forelse($recentGlucose as $entry)
+                        <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                            <span class="text-gray-400">{{ $entry->measured_at->format('M j H:i') }}</span>
+                            <span class="font-semibold {{ $entry->isInTargetRange() ? 'text-green-400' : 'text-red-400' }}">{{ $entry->glucose_mmol_l }}</span>
+                            <span class="text-xs text-gray-500">{{ \App\Models\GlucoseEntry::READING_TYPES[$entry->reading_type] ?? $entry->reading_type }}</span>
                         </div>
                     @empty
                         <p class="text-gray-500">No entries yet</p>
@@ -589,6 +669,72 @@
                     x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
                 }
             }
+        });
+
+        // Glucose Chart (Line with target range)
+        const glucoseCtx = document.getElementById('glucoseChart').getContext('2d');
+        new Chart(glucoseCtx, {
+            type: 'line',
+            data: {
+                labels: @json($glucoseChart['labels']),
+                datasets: [
+                    {
+                        label: 'Daily Average',
+                        data: @json($glucoseChart['average']),
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        spanGaps: true,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#ef4444',
+                    },
+                    {
+                        label: 'Fasting',
+                        data: @json($glucoseChart['fasting']),
+                        borderColor: '#f97316',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        tension: 0.3,
+                        spanGaps: true,
+                        pointRadius: 4,
+                        borderDash: [5, 5],
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { 
+                    legend: { 
+                        display: true,
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 15 }
+                    } 
+                },
+                scales: {
+                    y: { 
+                        grid: { color: '#374151' }, 
+                        ticks: { color: '#9ca3af', callback: v => v + ' mmol/L' },
+                        suggestedMin: 3,
+                        suggestedMax: 12
+                    },
+                    x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                }
+            },
+            plugins: [{
+                id: 'targetRange',
+                beforeDraw: (chart) => {
+                    const ctx = chart.ctx;
+                    const yAxis = chart.scales.y;
+                    const xAxis = chart.scales.x;
+                    const yMin = yAxis.getPixelForValue(4.0);
+                    const yMax = yAxis.getPixelForValue(7.0);
+                    
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+                    ctx.fillRect(xAxis.left, yMax, xAxis.right - xAxis.left, yMin - yMax);
+                    ctx.restore();
+                }
+            }]
         });
     </script>
 </body>

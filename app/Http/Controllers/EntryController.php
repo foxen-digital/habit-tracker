@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GlucoseEntry;
 use App\Models\MoodEntry;
 use App\Models\WalkEntry;
 use App\Models\WaterEntry;
@@ -71,5 +72,19 @@ class EntryController extends Controller
         );
 
         return redirect('/')->with('success', 'Mood entry saved!');
+    }
+
+    public function storeGlucose(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'glucose_mmol_l' => 'required|numeric|min:1|max:30',
+            'reading_type' => 'required|in:'.implode(',', array_keys(GlucoseEntry::READING_TYPES)),
+            'measured_at' => 'required|date|before_or_equal:now',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        GlucoseEntry::create($validated);
+
+        return redirect('/')->with('success', 'Glucose entry saved!');
     }
 }

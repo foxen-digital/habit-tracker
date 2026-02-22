@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DailyGoal;
+use App\Models\GlucoseEntry;
 use App\Models\MoodEntry;
 use App\Models\WalkEntry;
 use App\Models\WaterEntry;
@@ -21,16 +22,19 @@ class DashboardController extends Controller
             'walkStats' => WalkEntry::getWeeklyStats(),
             'waterToday' => WaterEntry::getTodayIntake(),
             'moodTrend' => MoodEntry::getWeeklyMoodTrend(),
+            'glucoseStats' => GlucoseEntry::getWeeklyStats(),
 
             // Recent entries for lists
             'recentWeights' => WeightEntry::orderBy('date', 'desc')->take(7)->get(),
             'recentWalks' => WalkEntry::orderBy('date', 'desc')->take(7)->get(),
+            'recentGlucose' => GlucoseEntry::orderBy('measured_at', 'desc')->take(7)->get(),
 
             // Chart data (contiguous days)
             'weightChart' => WeightEntry::getChartData(14),
             'walkChart' => WalkEntry::getChartData(7),
             'waterChart' => WaterEntry::getChartData(7),
             'moodChart' => MoodEntry::getChartData(7),
+            'glucoseChart' => GlucoseEntry::getChartData(7),
 
             // Daily goals
             'dailyGoals' => DailyGoal::getActiveGoals(),
