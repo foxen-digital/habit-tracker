@@ -13,6 +13,7 @@ class DailyGoalCompletionFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => \App\Models\User::factory(),
             'daily_goal_id' => DailyGoal::factory(),
             'date' => $this->faker->dateTimeBetween('-30 days', 'now')->format('Y-m-d'),
             'completed' => $this->faker->boolean(),

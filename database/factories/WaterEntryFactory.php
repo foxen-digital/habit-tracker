@@ -12,6 +12,7 @@ class WaterEntryFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => \App\Models\User::factory(),
             'glasses' => $this->faker->numberBetween(0, 10),
             'date' => $this->faker->dateTimeBetween('-30 days', 'now')->format('Y-m-d'),
         ];

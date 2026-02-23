@@ -2,15 +2,17 @@
 
 use App\Models\DailyGoal;
 use App\Models\DailyGoalCompletion;
+use App\Models\User;
 use Carbon\Carbon;
 
 beforeEach(function () {
     Carbon::setTestNow('2026-02-17');
+    $this->user = User::factory()->create();
 });
 
 describe('DailyGoalCompletion model', function () {
     it('can create a completion', function () {
-        $goal = DailyGoal::factory()->create();
+        $goal = DailyGoal::factory()->create(['user_id' => $this->user->id]);
         $completion = DailyGoalCompletion::factory()->create([
             'daily_goal_id' => $goal->id,
             'date' => '2026-02-17',
@@ -22,14 +24,17 @@ describe('DailyGoalCompletion model', function () {
     });
 
     it('casts date to carbon instance', function () {
-        $completion = DailyGoalCompletion::factory()->create();
+        $goal = DailyGoal::factory()->create(['user_id' => $this->user->id]);
+        $completion = DailyGoalCompletion::factory()->create(['daily_goal_id' => $goal->id]);
 
         expect($completion->date)->toBeInstanceOf(Carbon::class);
     });
 
     it('casts completed to boolean', function () {
+        $goal = DailyGoal::factory()->create(['user_id' => $this->user->id]);
         $completion = DailyGoalCompletion::create([
-            'daily_goal_id' => DailyGoal::factory()->create()->id,
+            'user_id' => $this->user->id,
+            'daily_goal_id' => $goal->id,
             'date' => '2026-02-17',
             'completed' => 1,
         ]);
@@ -38,7 +43,7 @@ describe('DailyGoalCompletion model', function () {
     });
 
     it('belongs to a goal', function () {
-        $goal = DailyGoal::factory()->create();
+        $goal = DailyGoal::factory()->create(['user_id' => $this->user->id]);
         $completion = DailyGoalCompletion::factory()->create(['daily_goal_id' => $goal->id]);
 
         expect($completion->goal->id)->toBe($goal->id);

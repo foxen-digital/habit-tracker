@@ -12,6 +12,7 @@ class MoodEntryFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => \App\Models\User::factory(),
             'mood' => $this->faker->randomElement(['great', 'good', 'okay', 'bad', 'terrible']),
             'energy_level' => $this->faker->numberBetween(1, 10),
             'sleep_quality' => $this->faker->optional()->numberBetween(1, 10),

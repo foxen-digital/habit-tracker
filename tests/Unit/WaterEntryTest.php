@@ -1,15 +1,18 @@
 <?php
 
+use App\Models\User;
 use App\Models\WaterEntry;
 use Carbon\Carbon;
 
 beforeEach(function () {
     Carbon::setTestNow('2026-02-17');
+    $this->user = User::factory()->create();
 });
 
 describe('WaterEntry model', function () {
     it('can create a water entry', function () {
         $entry = WaterEntry::factory()->create([
+            'user_id' => $this->user->id,
             'glasses' => 6,
             'date' => '2026-02-17',
         ]);
@@ -19,7 +22,7 @@ describe('WaterEntry model', function () {
     });
 
     it('casts date to carbon instance', function () {
-        $entry = WaterEntry::factory()->create();
+        $entry = WaterEntry::factory()->create(['user_id' => $this->user->id]);
 
         expect($entry->date)->toBeInstanceOf(Carbon::class);
     });
@@ -27,26 +30,26 @@ describe('WaterEntry model', function () {
 
 describe('WaterEntry::getTodayIntake', function () {
     it('returns zero when no entries today', function () {
-        WaterEntry::create(['glasses' => 5, 'date' => '2026-02-16']);
+        WaterEntry::create(['user_id' => $this->user->id, 'glasses' => 5, 'date' => '2026-02-16']);
 
-        $intake = WaterEntry::getTodayIntake();
+        $intake = WaterEntry::getTodayIntake($this->user);
 
         expect($intake)->toBe(0);
     });
 
     it('returns glasses for today entry', function () {
-        WaterEntry::create(['glasses' => 4, 'date' => '2026-02-17']);
+        WaterEntry::create(['user_id' => $this->user->id, 'glasses' => 4, 'date' => '2026-02-17']);
 
-        $intake = WaterEntry::getTodayIntake();
+        $intake = WaterEntry::getTodayIntake($this->user);
 
         expect($intake)->toBe(4);
     });
 
     it('does not include other days', function () {
-        WaterEntry::create(['glasses' => 10, 'date' => '2026-02-16']);
-        WaterEntry::create(['glasses' => 2, 'date' => '2026-02-17']);
+        WaterEntry::create(['user_id' => $this->user->id, 'glasses' => 10, 'date' => '2026-02-16']);
+        WaterEntry::create(['user_id' => $this->user->id, 'glasses' => 2, 'date' => '2026-02-17']);
 
-        $intake = WaterEntry::getTodayIntake();
+        $intake = WaterEntry::getTodayIntake($this->user);
 
         expect($intake)->toBe(2);
     });
@@ -54,7 +57,7 @@ describe('WaterEntry::getTodayIntake', function () {
 
 describe('WaterEntry::getChartData', function () {
     it('returns correct structure', function () {
-        $chart = WaterEntry::getChartData(7);
+        $chart = WaterEntry::getChartData($this->user, 7);
 
         expect($chart)->toHaveKeys(['labels', 'data'])
             ->and($chart['labels'])->toHaveCount(7)
@@ -62,16 +65,16 @@ describe('WaterEntry::getChartData', function () {
     });
 
     it('returns data for days with entries', function () {
-        WaterEntry::create(['glasses' => 5, 'date' => '2026-02-17']);
+        WaterEntry::create(['user_id' => $this->user->id, 'glasses' => 5, 'date' => '2026-02-17']);
 
-        $chart = WaterEntry::getChartData(1);
+        $chart = WaterEntry::getChartData($this->user, 1);
 
         // Today should have 5 glasses
         expect($chart['data'][0])->toBe(5);
     });
 
     it('fills days without entries with zero', function () {
-        $chart = WaterEntry::getChartData(3);
+        $chart = WaterEntry::getChartData($this->user, 3);
 
         // No entries exist
         expect($chart['data'][0])->toBe(0);
