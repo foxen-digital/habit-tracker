@@ -3,14 +3,17 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class GlucoseEntry extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'glucose_mmol_l',
         'reading_type',
         'measured_at',
@@ -40,6 +43,22 @@ class GlucoseEntry extends Model
     ];
 
     /**
+     * Get the user that owns this entry.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Scope query to a specific user.
+     */
+    public function scopeForUser(Builder $query, User $user): Builder
+    {
+        return $query->where('user_id', $user->id);
+    }
+
+    /**
      * Check if reading is within target range
      */
     public function isInTargetRange(): bool
@@ -58,12 +77,13 @@ class GlucoseEntry extends Model
     }
 
     /**
-     * Get weekly statistics
+     * Get weekly statistics for a user.
      */
-    public static function getWeeklyStats(): array
+    public static function getWeeklyStats(User $user): array
     {
         $now = now();
-        $last7Days = static::whereBetween('measured_at', [$now->copy()->subDays(7), $now])
+        $last7Days = static::forUser($user)
+            ->whereBetween('measured_at', [$now->copy()->subDays(7), $now])
             ->orderBy('measured_at', 'desc')
             ->get();
 
@@ -87,11 +107,12 @@ class GlucoseEntry extends Model
     }
 
     /**
-     * Get glucose data for the last N days (grouped by day)
+     * Get glucose data for the last N days (grouped by day) for a user.
      */
-    public static function getChartData(int $days = 7): array
+    public static function getChartData(User $user, int $days = 7): array
     {
-        $entries = static::where('measured_at', '>=', now()->subDays($days)->startOfDay())
+        $entries = static::forUser($user)
+            ->where('measured_at', '>=', now()->subDays($days)->startOfDay())
             ->orderBy('measured_at')
             ->get()
             ->groupBy(fn ($e) => $e->measured_at->format('Y-m-d'));

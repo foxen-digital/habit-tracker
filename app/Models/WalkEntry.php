@@ -3,14 +3,17 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WalkEntry extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'distance_miles',
         'steps',
         'date',
@@ -22,9 +25,30 @@ class WalkEntry extends Model
         'distance_miles' => 'decimal:2',
     ];
 
-    public static function getWeeklyStats(): array
+    /**
+     * Get the user that owns this entry.
+     */
+    public function user(): BelongsTo
     {
-        $entries = static::where('date', '>=', now()->subDays(7))->get();
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Scope query to a specific user.
+     */
+    public function scopeForUser(Builder $query, User $user): Builder
+    {
+        return $query->where('user_id', $user->id);
+    }
+
+    /**
+     * Get weekly stats for a user.
+     */
+    public static function getWeeklyStats(User $user): array
+    {
+        $entries = static::forUser($user)
+            ->where('date', '>=', now()->subDays(7))
+            ->get();
 
         $totalMiles = $entries->sum('distance_miles');
         $avgMiles = $entries->avg('distance_miles');
@@ -37,11 +61,12 @@ class WalkEntry extends Model
     }
 
     /**
-     * Get walking data for the last N days (contiguous)
+     * Get walking data for the last N days (contiguous) for a user.
      */
-    public static function getChartData(int $days = 7): array
+    public static function getChartData(User $user, int $days = 7): array
     {
-        $entries = static::where('date', '>=', now()->subDays($days)->startOfDay())
+        $entries = static::forUser($user)
+            ->where('date', '>=', now()->subDays($days)->startOfDay())
             ->get()
             ->keyBy(fn ($e) => $e->date->format('Y-m-d'));
 

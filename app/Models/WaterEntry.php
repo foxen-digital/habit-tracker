@@ -3,14 +3,17 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WaterEntry extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'glasses',
         'date',
     ];
@@ -19,17 +22,37 @@ class WaterEntry extends Model
         'date' => 'date',
     ];
 
-    public static function getTodayIntake(): int
+    /**
+     * Get the user that owns this entry.
+     */
+    public function user(): BelongsTo
     {
-        return static::where('date', today())->sum('glasses');
+        return $this->belongsTo(User::class);
     }
 
     /**
-     * Get water intake data for the last N days (contiguous)
+     * Scope query to a specific user.
      */
-    public static function getChartData(int $days = 7): array
+    public function scopeForUser(Builder $query, User $user): Builder
     {
-        $entries = static::where('date', '>=', now()->subDays($days)->startOfDay())
+        return $query->where('user_id', $user->id);
+    }
+
+    /**
+     * Get today's intake for a user.
+     */
+    public static function getTodayIntake(User $user): int
+    {
+        return static::forUser($user)->where('date', today())->sum('glasses');
+    }
+
+    /**
+     * Get water intake data for the last N days (contiguous) for a user.
+     */
+    public static function getChartData(User $user, int $days = 7): array
+    {
+        $entries = static::forUser($user)
+            ->where('date', '>=', now()->subDays($days)->startOfDay())
             ->get()
             ->groupBy(fn ($e) => $e->date->format('Y-m-d'))
             ->map(fn ($group) => $group->sum('glasses'));

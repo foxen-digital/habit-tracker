@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danny's Habit Tracker</title>
+    <title>Habit Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -12,12 +12,23 @@
         <!-- Header -->
         <header class="mb-6 flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-emerald-400">Danny's Habit Tracker</h1>
+                <h1 class="text-3xl font-bold text-emerald-400">{{ auth()->user()->name }}'s Habit Tracker</h1>
                 <p class="text-gray-400 mt-1">{{ now()->format('l, F jS, Y') }}</p>
             </div>
-            <button onclick="toggleEntryForms()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg font-medium transition-colors">
-                + Add Entry
-            </button>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('settings.index') }}" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-medium transition-colors">
+                    ⚙️ Settings
+                </a>
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <button type="submit" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-medium transition-colors">
+                        Sign Out
+                    </button>
+                </form>
+                <button onclick="toggleEntryForms()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                    + Add Entry
+                </button>
+            </div>
         </header>
 
         <!-- Flash Message -->
@@ -204,7 +215,7 @@
                 </div>
                 @if($weightProgress['current'])
                     <div class="text-3xl font-bold text-white">{{ $weightProgress['lost'] }}kg</div>
-                    <div class="text-sm text-gray-400">of 25kg goal lost</div>
+                    <div class="text-sm text-gray-400">of {{ $settings->weight_goal_kg }}kg goal lost</div>
                     <div class="mt-3 bg-gray-700 rounded-full h-2">
                         <div class="bg-emerald-500 h-2 rounded-full" style="width: {{ $weightProgress['progress_percent'] }}%"></div>
                     </div>
@@ -227,7 +238,7 @@
                         <div class="w-full h-2 {{ $i <= $walkStats['average_miles'] ? 'bg-blue-500' : 'bg-gray-700' }} rounded"></div>
                     @endfor
                 </div>
-                <div class="text-xs text-gray-500 mt-1">Goal: 3mi/day</div>
+                <div class="text-xs text-gray-500 mt-1">Goal: {{ $settings->daily_walk_target_miles }}mi/day</div>
             </div>
 
             <!-- Water Intake -->
@@ -239,11 +250,11 @@
                 <div class="text-3xl font-bold text-white">{{ $waterToday }}</div>
                 <div class="text-sm text-gray-400">glasses ({{ $waterToday * 250 }}ml)</div>
                 <div class="mt-3 flex gap-1">
-                    @for($i = 1; $i <= 8; $i++)
+                    @for($i = 1; $i <= $settings->daily_water_target_glasses; $i++)
                         <div class="w-4 h-6 {{ $i <= $waterToday ? 'bg-cyan-500' : 'bg-gray-700' }} rounded"></div>
                     @endfor
                 </div>
-                <div class="text-xs text-gray-500 mt-1">Goal: 8 glasses</div>
+                <div class="text-xs text-gray-500 mt-1">Goal: {{ $settings->daily_water_target_glasses }} glasses</div>
             </div>
 
             <!-- Mood Trend -->
@@ -379,7 +390,7 @@
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold">Weight Trend (Last 14 Days)</h3>
-                    <span class="text-emerald-400 text-sm">Goal: -25kg</span>
+                    <span class="text-emerald-400 text-sm">Goal: -{{ $settings->weight_goal_kg }}kg</span>
                 </div>
                 <canvas id="weightChart" height="200"></canvas>
             </div>
@@ -388,7 +399,7 @@
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold">Walking Distance (Last 7 Days)</h3>
-                    <span class="text-blue-400 text-sm">Goal: 3mi/day</span>
+                    <span class="text-blue-400 text-sm">Goal: {{ $settings->daily_walk_target_miles }}mi/day</span>
                 </div>
                 <canvas id="walkChart" height="200"></canvas>
             </div>
@@ -400,7 +411,7 @@
             <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold">Water Intake (Last 7 Days)</h3>
-                    <span class="text-cyan-400 text-sm">Goal: 8 glasses</span>
+                    <span class="text-cyan-400 text-sm">Goal: {{ $settings->daily_water_target_glasses }} glasses</span>
                 </div>
                 <canvas id="waterChart" height="200"></canvas>
             </div>
@@ -527,6 +538,7 @@
 
         // Walk Chart (Bar with goal line)
         const walkCtx = document.getElementById('walkChart').getContext('2d');
+        const walkGoal = {{ $settings->daily_walk_target_miles }};
         new Chart(walkCtx, {
             type: 'bar',
             data: {
@@ -546,8 +558,8 @@
                         annotations: {
                             goalLine: {
                                 type: 'line',
-                                yMin: 3,
-                                yMax: 3,
+                                yMin: walkGoal,
+                                yMax: walkGoal,
                                 borderColor: '#60a5fa',
                                 borderWidth: 2,
                                 borderDash: [5, 5],
@@ -559,7 +571,7 @@
                     y: { 
                         grid: { color: '#374151' }, 
                         ticks: { color: '#9ca3af', callback: v => v + 'mi' },
-                        suggestedMax: 4
+                        suggestedMax: walkGoal + 1
                     },
                     x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
                 }
@@ -568,6 +580,7 @@
 
         // Water Chart (Bar with goal line)
         const waterCtx = document.getElementById('waterChart').getContext('2d');
+        const waterGoal = {{ $settings->daily_water_target_glasses }};
         new Chart(waterCtx, {
             type: 'bar',
             data: {
@@ -586,7 +599,7 @@
                     y: { 
                         grid: { color: '#374151' }, 
                         ticks: { color: '#9ca3af', stepSize: 2 },
-                        suggestedMax: 10
+                        suggestedMax: waterGoal + 2
                     },
                     x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
                 }
@@ -597,7 +610,7 @@
                     const ctx = chart.ctx;
                     const yAxis = chart.scales.y;
                     const xAxis = chart.scales.x;
-                    const y = yAxis.getPixelForValue(8);
+                    const y = yAxis.getPixelForValue(waterGoal);
                     
                     ctx.save();
                     ctx.beginPath();

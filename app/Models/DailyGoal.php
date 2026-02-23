@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DailyGoal extends Model
@@ -12,6 +15,7 @@ class DailyGoal extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'name',
         'emoji',
         'is_active',
@@ -21,6 +25,22 @@ class DailyGoal extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    /**
+     * Get the user that owns this goal.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Scope query to a specific user.
+     */
+    public function scopeForUser(Builder $query, User $user): Builder
+    {
+        return $query->where('user_id', $user->id);
+    }
 
     public function completions(): HasMany
     {
@@ -39,17 +59,18 @@ class DailyGoal extends Model
         return $completion?->completed ?? false;
     }
 
-    public static function getActiveGoals(): \Illuminate\Database\Eloquent\Collection
+    public static function getActiveGoals(User $user): Collection
     {
-        return static::where('is_active', true)
+        return static::forUser($user)
+            ->where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
     }
 
-    public static function getStatsForDate(Carbon $date): array
+    public static function getStatsForDate(User $user, Carbon $date): array
     {
-        $goals = static::getActiveGoals();
+        $goals = static::getActiveGoals($user);
         $completed = 0;
 
         foreach ($goals as $goal) {
@@ -65,10 +86,10 @@ class DailyGoal extends Model
         ];
     }
 
-    public static function getWeeklyStats(): array
+    public static function getWeeklyStats(User $user): array
     {
         $stats = [];
-        $goals = static::getActiveGoals();
+        $goals = static::getActiveGoals($user);
 
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);

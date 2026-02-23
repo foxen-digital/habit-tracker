@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\MoodEntry;
+use App\Models\User;
 use App\Models\WalkEntry;
 use App\Models\WaterEntry;
 use App\Models\WeightEntry;
@@ -8,6 +9,10 @@ use Carbon\Carbon;
 
 beforeEach(function () {
     Carbon::setTestNow('2026-02-17');
+    $this->user = User::factory()->create([
+        'email_verified_at' => now(),
+    ]);
+    $this->actingAs($this->user);
 });
 
 describe('EntryController::storeWeight', function () {
@@ -21,7 +26,8 @@ describe('EntryController::storeWeight', function () {
             ->assertSessionHas('success', 'Weight entry saved!');
 
         expect(WeightEntry::count())->toBe(1)
-            ->and((float) WeightEntry::first()->weight_kg)->toEqual(85.5);
+            ->and((float) WeightEntry::first()->weight_kg)->toEqual(85.5)
+            ->and(WeightEntry::first()->user_id)->toBe($this->user->id);
     });
 
     it('validates weight is required', function () {
@@ -86,7 +92,8 @@ describe('EntryController::storeWalk', function () {
 
         expect(WalkEntry::count())->toBe(1)
             ->and((float) WalkEntry::first()->distance_miles)->toEqual(2.5)
-            ->and(WalkEntry::first()->steps)->toBe(5000);
+            ->and(WalkEntry::first()->steps)->toBe(5000)
+            ->and(WalkEntry::first()->user_id)->toBe($this->user->id);
     });
 
     it('validates distance is required', function () {
@@ -131,7 +138,8 @@ describe('EntryController::storeWater', function () {
             ->assertSessionHas('success', 'Water entry saved!');
 
         expect(WaterEntry::count())->toBe(1)
-            ->and(WaterEntry::first()->glasses)->toBe(6);
+            ->and(WaterEntry::first()->glasses)->toBe(6)
+            ->and(WaterEntry::first()->user_id)->toBe($this->user->id);
     });
 
     it('validates glasses is required', function () {
@@ -162,7 +170,8 @@ describe('EntryController::storeMood', function () {
         expect(MoodEntry::count())->toBe(1)
             ->and(MoodEntry::first()->mood)->toBe('good')
             ->and(MoodEntry::first()->energy_level)->toBe(7)
-            ->and(MoodEntry::first()->sleep_quality)->toBe(8);
+            ->and(MoodEntry::first()->sleep_quality)->toBe(8)
+            ->and(MoodEntry::first()->user_id)->toBe($this->user->id);
     });
 
     it('validates mood is valid option', function () {

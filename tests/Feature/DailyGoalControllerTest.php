@@ -2,10 +2,15 @@
 
 use App\Models\DailyGoal;
 use App\Models\DailyGoalCompletion;
+use App\Models\User;
 use Carbon\Carbon;
 
 beforeEach(function () {
     Carbon::setTestNow('2026-02-17');
+    $this->user = User::factory()->create([
+        'email_verified_at' => now(),
+    ]);
+    $this->actingAs($this->user);
 });
 
 describe('DailyGoalController::store', function () {
@@ -21,7 +26,8 @@ describe('DailyGoalController::store', function () {
         expect(DailyGoal::count())->toBe(1)
             ->and(DailyGoal::first()->name)->toBe('Hit Calorie Target')
             ->and(DailyGoal::first()->emoji)->toBe('🎯')
-            ->and(DailyGoal::first()->is_active)->toBeTrue();
+            ->and(DailyGoal::first()->is_active)->toBeTrue()
+            ->and(DailyGoal::first()->user_id)->toBe($this->user->id);
     });
 
     it('sets default emoji if not provided', function () {
@@ -53,7 +59,7 @@ describe('DailyGoalController::store', function () {
 
 describe('DailyGoalController::toggleCompletion', function () {
     it('creates a completion record', function () {
-        $goal = DailyGoal::factory()->create();
+        $goal = DailyGoal::factory()->create(['user_id' => $this->user->id]);
 
         $response = $this->post("/goals/{$goal->id}/toggle", [
             'date' => '2026-02-17',
@@ -64,29 +70,42 @@ describe('DailyGoalController::toggleCompletion', function () {
             ->assertSessionHas('success', 'Goal marked as complete!');
 
         expect(DailyGoalCompletion::count())->toBe(1)
-            ->and(DailyGoalCompletion::first()->completed)->toBeTrue();
+            ->and(DailyGoalCompletion::first()->completed)->toBeTrue()
+            ->and(DailyGoalCompletion::first()->user_id)->toBe($this->user->id);
     });
 
     it('validates date is required', function () {
-        $goal = DailyGoal::factory()->create();
+        $goal = DailyGoal::factory()->create(['user_id' => $this->user->id]);
 
         $this->post("/goals/{$goal->id}/toggle", ['completed' => true])
             ->assertSessionHasErrors(['date']);
     });
 
     it('validates completed is boolean', function () {
-        $goal = DailyGoal::factory()->create();
+        $goal = DailyGoal::factory()->create(['user_id' => $this->user->id]);
 
         $this->post("/goals/{$goal->id}/toggle", [
             'date' => '2026-02-17',
             'completed' => 'yes',
         ])->assertSessionHasErrors(['completed']);
     });
+
+    it('prevents toggling other users goals', function () {
+        $otherUser = User::factory()->create();
+        $goal = DailyGoal::factory()->create(['user_id' => $otherUser->id]);
+
+        $response = $this->post("/goals/{$goal->id}/toggle", [
+            'date' => '2026-02-17',
+            'completed' => true,
+        ]);
+
+        $response->assertForbidden();
+    });
 });
 
 describe('DailyGoalController::update', function () {
     it('updates goal name', function () {
-        $goal = DailyGoal::factory()->create(['name' => 'Old Name']);
+        $goal = DailyGoal::factory()->create(['user_id' => $this->user->id, 'name' => 'Old Name']);
 
         $this->patch("/goals/{$goal->id}", ['name' => 'New Name'])
             ->assertSessionHas('success', 'Goal updated!');
@@ -95,7 +114,7 @@ describe('DailyGoalController::update', function () {
     });
 
     it('can deactivate a goal', function () {
-        $goal = DailyGoal::factory()->create(['is_active' => true]);
+        $goal = DailyGoal::factory()->create(['user_id' => $this->user->id, 'is_active' => true]);
 
         $this->patch("/goals/{$goal->id}", ['is_active' => false])
             ->assertSessionHasNoErrors();
@@ -104,18 +123,27 @@ describe('DailyGoalController::update', function () {
     });
 
     it('can update emoji', function () {
-        $goal = DailyGoal::factory()->create(['emoji' => '✅']);
+        $goal = DailyGoal::factory()->create(['user_id' => $this->user->id, 'emoji' => '✅']);
 
         $this->patch("/goals/{$goal->id}", ['emoji' => '🎯'])
             ->assertSessionHasNoErrors();
 
         expect($goal->fresh()->emoji)->toBe('🎯');
     });
+
+    it('prevents updating other users goals', function () {
+        $otherUser = User::factory()->create();
+        $goal = DailyGoal::factory()->create(['user_id' => $otherUser->id, 'name' => 'Old Name']);
+
+        $response = $this->patch("/goals/{$goal->id}", ['name' => 'New Name']);
+
+        $response->assertForbidden();
+    });
 });
 
 describe('DailyGoalController::destroy', function () {
     it('deletes a goal', function () {
-        $goal = DailyGoal::factory()->create();
+        $goal = DailyGoal::factory()->create(['user_id' => $this->user->id]);
 
         $response = $this->delete("/goals/{$goal->id}");
 
@@ -123,5 +151,14 @@ describe('DailyGoalController::destroy', function () {
             ->assertSessionHas('success', 'Goal deleted!');
 
         expect(DailyGoal::find($goal->id))->toBeNull();
+    });
+
+    it('prevents deleting other users goals', function () {
+        $otherUser = User::factory()->create();
+        $goal = DailyGoal::factory()->create(['user_id' => $otherUser->id]);
+
+        $response = $this->delete("/goals/{$goal->id}");
+
+        $response->assertForbidden();
     });
 });

@@ -20,6 +20,8 @@ class EntryController extends Controller
             'notes' => 'nullable|string|max:255',
         ]);
 
+        $validated['user_id'] = $request->user()->id;
+
         WeightEntry::create($validated);
 
         return redirect('/')->with('success', 'Weight entry saved!');
@@ -34,6 +36,8 @@ class EntryController extends Controller
             'notes' => 'nullable|string|max:255',
         ]);
 
+        $validated['user_id'] = $request->user()->id;
+
         WalkEntry::create($validated);
 
         return redirect('/')->with('success', 'Walk entry saved!');
@@ -46,9 +50,11 @@ class EntryController extends Controller
             'date' => 'required|date|before_or_equal:today',
         ]);
 
-        // Update or create - one water entry per day
+        $validated['user_id'] = $request->user()->id;
+
+        // Update or create - one water entry per day per user
         WaterEntry::updateOrCreate(
-            ['date' => $validated['date']],
+            ['date' => $validated['date'], 'user_id' => $validated['user_id']],
             ['glasses' => $validated['glasses']]
         );
 
@@ -65,9 +71,11 @@ class EntryController extends Controller
             'date' => 'required|date|before_or_equal:today',
         ]);
 
-        // Update or create - one mood entry per day
+        $validated['user_id'] = $request->user()->id;
+
+        // Update or create - one mood entry per day per user
         MoodEntry::updateOrCreate(
-            ['date' => $validated['date']],
+            ['date' => $validated['date'], 'user_id' => $validated['user_id']],
             $validated
         );
 
@@ -82,6 +90,8 @@ class EntryController extends Controller
             'measured_at' => 'required|date|before_or_equal:now',
             'notes' => 'nullable|string|max:500',
         ]);
+
+        $validated['user_id'] = $request->user()->id;
 
         GlucoseEntry::create($validated);
 
