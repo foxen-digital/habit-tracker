@@ -1,59 +1,108 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Habit Tracker
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A personal health and habit tracking application built with Laravel. Track your weight, walking, water intake, mood, blood glucose, and daily goals all in one place.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Health Metrics
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Weight Tracking** - Log your daily weight with progress visualization toward your goal
+- **Walking Log** - Track daily walking distance with target goals
+- **Water Intake** - Monitor daily water consumption by glasses
+- **Mood Tracking** - Record your mood with emoji-based entries and optional notes
+- **Blood Glucose** - Log glucose readings with meal context (fasting, before/after meals)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Daily Goals
 
-## Learning Laravel
+- Create custom daily goals (e.g., "Hit Calorie Target", "Brush Teeth", "Stretch Routine")
+- Check off goals each day with emoji indicators
+- View weekly completion statistics
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Dashboard
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Unified dashboard showing all metrics at a glance
+- Progress charts for weight loss journey
+- Weekly statistics for daily goals
+- Quick entry forms for all metrics
 
-## Laravel Sponsors
+### User Features
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- Secure authentication (Laravel Fortify)
+- Two-factor authentication support
+- Personalized settings (weight unit, distance unit, targets)
+- Multi-user support with data isolation
 
-### Premium Partners
+## Tech Stack
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- **Framework:** Laravel 12
+- **PHP Version:** 8.4+
+- **Frontend:** Blade templates with Tailwind CSS 4
+- **Authentication:** Laravel Fortify
+- **Testing:** Pest PHP
+- **Code Style:** Laravel Pint
 
-## Contributing
+## Installation
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/foxen-digital/habit-tracker.git
+   cd habit-tracker
+   ```
 
-## Code of Conduct
+2. Install dependencies:
+   ```bash
+   composer install
+   npm install
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+3. Set up environment:
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-## Security Vulnerabilities
+4. Configure your database in `.env`, then run migrations:
+   ```bash
+   php artisan migrate
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+5. Build frontend assets:
+   ```bash
+   npm run build
+   ```
+
+6. Serve the application:
+   ```bash
+   php artisan serve
+   ```
+
+Or use the convenience command:
+```bash
+composer dev
+```
+
+## Testing
+
+Run the test suite with Pest:
+
+```bash
+php artisan test
+# or
+pest
+```
+
+## Code Style
+
+Format code with Laravel Pint:
+
+```bash
+./vendor/bin/pint
+```
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+---
+
+Built by [Foxen Digital](https://foxendigital.co.uk)
