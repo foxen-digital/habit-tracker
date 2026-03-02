@@ -49,7 +49,7 @@ class DailyGoal extends Model
 
     public function getCompletionForDate(Carbon $date): ?DailyGoalCompletion
     {
-        return $this->completions()->where('date', $date->format('Y-m-d'))->first();
+        return $this->completions()->where('date', $date)->first();
     }
 
     public function isCompletedForDate(Carbon $date): bool
@@ -57,6 +57,11 @@ class DailyGoal extends Model
         $completion = $this->getCompletionForDate($date);
 
         return $completion?->completed ?? false;
+    }
+
+    public function isCompletedToday(): bool
+    {
+        return $this->isCompletedForDate(Carbon::today());
     }
 
     public static function getActiveGoals(User $user): Collection
@@ -82,7 +87,9 @@ class DailyGoal extends Model
         return [
             'total' => $goals->count(),
             'completed' => $completed,
-            'percent' => $goals->count() > 0 ? round(($completed / $goals->count()) * 100) : 0,
+            'percent' => $goals->count() > 0
+                    ? round(($completed / $goals->count()) * 100)
+                    : 0,
         ];
     }
 
@@ -105,7 +112,9 @@ class DailyGoal extends Model
                 'date' => $date->format('D'),
                 'completed' => $completed,
                 'total' => $goals->count(),
-                'percent' => $goals->count() > 0 ? round(($completed / $goals->count()) * 100) : 0,
+                'percent' => $goals->count() > 0
+                        ? round(($completed / $goals->count()) * 100)
+                        : 0,
             ];
         }
 

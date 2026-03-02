@@ -328,7 +328,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
                     @foreach($dailyGoals as $goal)
                         @php
-                            $isCompleted = $goal->isCompletedForDate(now());
+                            $isCompleted = $goal->isCompletedToday();
                         @endphp
                         <div class="flex items-center gap-3 bg-gray-700/30 rounded-lg p-3 {{ $isCompleted ? 'opacity-60' : '' }}">
                             <form action="{{ route('goals.toggle', $goal) }}" method="POST" class="flex-shrink-0">
@@ -527,8 +527,8 @@
                 responsive: true,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { 
-                        grid: { color: '#374151' }, 
+                    y: {
+                        grid: { color: '#374151' },
                         ticks: { color: '#9ca3af', callback: v => v + 'kg' }
                     },
                     x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
@@ -552,7 +552,7 @@
             },
             options: {
                 responsive: true,
-                plugins: { 
+                plugins: {
                     legend: { display: false },
                     annotation: {
                         annotations: {
@@ -568,8 +568,8 @@
                     }
                 },
                 scales: {
-                    y: { 
-                        grid: { color: '#374151' }, 
+                    y: {
+                        grid: { color: '#374151' },
                         ticks: { color: '#9ca3af', callback: v => v + 'mi' },
                         suggestedMax: walkGoal + 1
                     },
@@ -596,8 +596,8 @@
                 responsive: true,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { 
-                        grid: { color: '#374151' }, 
+                    y: {
+                        grid: { color: '#374151' },
                         ticks: { color: '#9ca3af', stepSize: 2 },
                         suggestedMax: waterGoal + 2
                     },
@@ -611,7 +611,7 @@
                     const yAxis = chart.scales.y;
                     const xAxis = chart.scales.x;
                     const y = yAxis.getPixelForValue(waterGoal);
-                    
+
                     ctx.save();
                     ctx.beginPath();
                     ctx.setLineDash([5, 5]);
@@ -665,16 +665,16 @@
             },
             options: {
                 responsive: true,
-                plugins: { 
-                    legend: { 
+                plugins: {
+                    legend: {
                         display: true,
                         position: 'bottom',
                         labels: { boxWidth: 12, padding: 15 }
-                    } 
+                    }
                 },
                 scales: {
-                    y: { 
-                        grid: { color: '#374151' }, 
+                    y: {
+                        grid: { color: '#374151' },
                         ticks: { color: '#9ca3af', stepSize: 1 },
                         min: 0,
                         max: 10
@@ -716,16 +716,16 @@
             },
             options: {
                 responsive: true,
-                plugins: { 
-                    legend: { 
+                plugins: {
+                    legend: {
                         display: true,
                         position: 'bottom',
                         labels: { boxWidth: 12, padding: 15 }
-                    } 
+                    }
                 },
                 scales: {
-                    y: { 
-                        grid: { color: '#374151' }, 
+                    y: {
+                        grid: { color: '#374151' },
                         ticks: { color: '#9ca3af', callback: v => v + ' mmol/L' },
                         suggestedMin: 3,
                         suggestedMax: 12
@@ -741,7 +741,7 @@
                     const xAxis = chart.scales.x;
                     const yMin = yAxis.getPixelForValue(4.0);
                     const yMax = yAxis.getPixelForValue(7.0);
-                    
+
                     ctx.save();
                     ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
                     ctx.fillRect(xAxis.left, yMax, xAxis.right - xAxis.left, yMin - yMax);
