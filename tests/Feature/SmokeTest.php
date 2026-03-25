@@ -1,11 +1,13 @@
 <?php
 
+use Illuminate\Foundation\Application;
+
 /**
  * Smoke tests - Basic sanity checks to ensure the application is working
  */
 describe('application health', function () {
     it('can boot the application', function () {
-        expect(app())->toBeInstanceOf(Illuminate\Foundation\Application::class);
+        expect(app())->toBeInstanceOf(Application::class);
     });
 
     it('has a valid environment configured', function () {
