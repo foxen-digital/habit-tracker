@@ -14,7 +14,7 @@
                 <p class="text-gray-400 mt-2">Enter your new password below.</p>
             </div>
 
-            <form method="POST" action="{{ route('password.store') }}">
+            <form method="POST" action="{{ route('password.update') }}">
                 @csrf
 
                 <input type="hidden" name="token" value="{{ $request->route('token') }}">
