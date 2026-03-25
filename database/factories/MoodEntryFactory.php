@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\MoodEntry;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class MoodEntryFactory extends Factory
@@ -12,7 +13,7 @@ class MoodEntryFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => \App\Models\User::factory(),
+            'user_id' => User::factory(),
             'mood' => $this->faker->randomElement(['great', 'good', 'okay', 'bad', 'terrible']),
             'energy_level' => $this->faker->numberBetween(1, 10),
             'sleep_quality' => $this->faker->optional()->numberBetween(1, 10),
